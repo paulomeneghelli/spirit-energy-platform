@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2>Novo Agente</h2>
+
+    <form method="POST">
+
+        <div class="mb-3">
+
+            <label>Código CCEE</label>
+
+            <input
+                type="text"
+                name="codigo_ccee"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+        <div class="mb-3">
+
+            <label>Nome</label>
+
+            <input
+                type="text"
+                name="nome"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+        <div class="mb-3">
+
+            <label>CNPJ</label>
+
+            <input
+                type="text"
+                name="cnpj"
+                class="form-control"
+            >
+
+        </div>
+
+        <div class="mb-3">
+
+            <label>Tipo do Agente</label>
+
+            <select
+                name="tipo_agente"
+                class="form-select"
+            >
+
+                <option>Comercializador</option>
+                <option>Consumidor</option>
+                <option>Gerador</option>
+                <option>Distribuidor</option>
+
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+
+            <label>Status</label>
+
+            <select
+                name="status"
+                class="form-select"
+            >
+
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+
+            </select>
+
+        </div>
+
+        <button class="btn btn-success">
+
+            Salvar
+
+        </button>
+
+        <a
+            href="/agentes"
+            class="btn btn-secondary"
+        >
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}
