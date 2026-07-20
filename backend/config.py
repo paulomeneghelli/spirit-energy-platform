@@ -39,9 +39,9 @@ class Config:
     # Sistema
     # =========================
 
-    API_NAME = "API Spirit"
+    API_NAME =  "SPIRIT ENERGY PLATFORM"
 
-    VERSION = "0.1.0"
+    VERSION = "1.0.0"
 
 
 

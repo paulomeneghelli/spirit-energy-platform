@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+
+    <h2>Novo Contrato</h2>
+
+
+    <form method="POST">
+
+
+        <div class="mb-3">
+
+            <label>Agente</label>
+
+            <select
+                name="agente_id"
+                class="form-select"
+                required
+            >
+
+                {% for agente in agentes %}
+
+                <option value="{{ agente.id }}">
+
+                    {{ agente.nome }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+
+        <div class="mb-3">
+
+            <label>Código do Contrato</label>
+
+            <input
+                type="text"
+                name="codigo"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="mb-3">
+
+            <label>Contraparte</label>
+
+            <input
+                type="text"
+                name="contraparte"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="mb-3">
+
+            <label>Tipo de Energia</label>
+
+            <select
+                name="tipo_energia"
+                class="form-select"
+            >
+
+                <option>Convencional</option>
+
+                <option>Incentivada</option>
+
+            </select>
+
+        </div>
+
+
+
+        <div class="mb-3">
+
+            <label>Volume MWh</label>
+
+            <input
+                type="number"
+                step="0.01"
+                name="volume_mwh"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="mb-3">
+
+            <label>Preço MWh</label>
+
+            <input
+                type="number"
+                step="0.01"
+                name="preco_mwh"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="mb-3">
+
+            <label>Início da Vigência</label>
+
+            <input
+                type="date"
+                name="inicio_vigencia"
+                class="form-control"
+            >
+
+        </div>
+
+
+
+        <div class="mb-3">
+
+            <label>Fim da Vigência</label>
+
+            <input
+                type="date"
+                name="fim_vigencia"
+                class="form-control"
+            >
+
+        </div>
+
+
+
+        <div class="mb-3">
+
+            <label>Status</label>
+
+            <select
+                name="status"
+                class="form-select"
+            >
+
+                <option value="ativo">
+                    Ativo
+                </option>
+
+                <option value="inativo">
+                    Inativo
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <button class="btn btn-success">
+
+            Salvar
+
+        </button>
+
+
+        <a
+            href="/contratos"
+            class="btn btn-secondary"
+        >
+
+            Cancelar
+
+        </a>
+
+
+    </form>
+
+
+</div>
+
+
+{% endblock %}

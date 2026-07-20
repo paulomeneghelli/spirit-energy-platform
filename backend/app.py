@@ -7,7 +7,7 @@ from database import db
 from routes.api_routes import api
 from routes.agente_routes import agente_bp
 from routes.sincronizacao_routes import sincronizacao_bp
-
+from routes.contrato_routes import contrato_bp
 from models.agente import Agente
 
 
@@ -68,6 +68,11 @@ def create_app():
         sincronizacao_bp
     )
 
+
+
+    app.register_blueprint(
+        contrato_bp
+    )
 
     # =========================
     # Dashboard
