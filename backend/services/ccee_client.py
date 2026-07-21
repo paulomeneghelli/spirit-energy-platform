@@ -1,5 +1,4 @@
-import os
-import requests
+import requests_pkcs12
 
 from config import Config
 
@@ -8,43 +7,48 @@ class CCEEClient:
 
     def __init__(self):
 
-        self.base_url = Config.CCEE_URL
+        self.host = "https://servicos.ccee.org.br:443"
 
-        self.cert_path = Config.CCEE_CERT_PATH
+        self.certificado = Config.CCEE_CERT_PATH
 
-        self.cert_password = Config.CCEE_CERT_PASSWORD
-
-        self.session = requests.Session()
-
-        self.session.headers.update({
-
-            "Accept": "application/json",
-
-            "User-Agent": "Spirit/1.0"
-
-        })
+        self.senha_certificado = Config.CCEE_CERT_PASSWORD
 
 
-    def certificado_existe(self):
 
-        return os.path.exists(self.cert_path)
+    def post(
+        self,
+        endpoint,
+        xml,
+        soap_action
+    ):
 
+        headers = {
 
-    def informacoes(self):
+            "Content-Type": "text/xml;charset=UTF-8",
 
-        return {
-
-            "base_url": self.base_url,
-
-            "certificado": self.cert_path,
-
-            "certificado_encontrado": self.certificado_existe(),
-
-            "senha_configurada": bool(self.cert_password)
+            "SOAPAction": soap_action
 
         }
 
 
-    def testar_conexao(self):
+        response = requests_pkcs12.post(
 
-        return self.informacoes()
+            url=f"{self.host}{endpoint}",
+
+            data=xml.encode("utf-8"),
+
+            headers=headers,
+
+            pkcs12_filename=self.certificado,
+
+            pkcs12_password=self.senha_certificado,
+
+            timeout=60
+
+        )
+
+
+        response.raise_for_status()
+
+
+        return response.text

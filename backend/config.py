@@ -39,7 +39,7 @@ class Config:
     # Sistema
     # =========================
 
-    API_NAME =  "SPIRIT ENERGY PLATFORM"
+    API_NAME = "SPIRIT ENERGY PLATFORM"
 
     VERSION = "1.0.0"
 
@@ -57,12 +57,24 @@ class Config:
 
     CCEE_CERT_PATH = os.getenv(
         "CCEE_CERT_PATH",
-        "certificados/certificado.pfx"
+        "certificados/spiritgestaocertacom.pfx"
     )
 
 
     CCEE_CERT_PASSWORD = os.getenv(
         "CCEE_CERT_PASSWORD",
+        ""
+    )
+
+
+    CCEE_USERNAME = os.getenv(
+        "CCEE_USERNAME",
+        ""
+    )
+
+
+    CCEE_PASSWORD = os.getenv(
+        "CCEE_PASSWORD",
         ""
     )
 
