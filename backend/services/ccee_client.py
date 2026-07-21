@@ -1,17 +1,25 @@
 import requests_pkcs12
 
-from config import Config
+from services.ccee_auth import CCEEAuthService
 
 
 class CCEEClient:
+
 
     def __init__(self):
 
         self.host = "https://servicos.ccee.org.br:443"
 
-        self.certificado = Config.CCEE_CERT_PATH
 
-        self.senha_certificado = Config.CCEE_CERT_PASSWORD
+        auth = CCEEAuthService()
+
+
+        certificado = auth.obter_configuracao_certificado()
+
+
+        self.certificado = certificado["certificado"]
+
+        self.senha_certificado = certificado["senha_certificado"]
 
 
 
@@ -22,6 +30,7 @@ class CCEEClient:
         soap_action
     ):
 
+
         headers = {
 
             "Content-Type": "text/xml;charset=UTF-8",
@@ -29,6 +38,15 @@ class CCEEClient:
             "SOAPAction": soap_action
 
         }
+
+
+
+        print("=== ENVIANDO REQUISIÇÃO CCEE ===")
+
+        print(
+            f"Endpoint: {endpoint}"
+        )
+
 
 
         response = requests_pkcs12.post(
@@ -46,6 +64,13 @@ class CCEEClient:
             timeout=60
 
         )
+
+
+
+        print(
+            f"Status CCEE: {response.status_code}"
+        )
+
 
 
         response.raise_for_status()

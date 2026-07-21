@@ -1,5 +1,6 @@
 from services.ccee_client import CCEEClient
-from config import Config
+from services.ccee_auth import CCEEAuthService
+
 
 
 class CCEEService:
@@ -9,12 +10,23 @@ class CCEEService:
 
         self.client = CCEEClient()
 
+        self.auth = CCEEAuthService()
+
 
 
     def listar_ativos_medicao(
         self,
         codigo_agente
     ):
+
+
+        credenciais = self.auth.obter_credenciais()
+
+
+        usuario = credenciais["usuario"]
+
+        senha = credenciais["senha"]
+
 
 
         xml = f"""
@@ -41,21 +53,23 @@ xmlns:v22="http://xmlns.energia.org.br/BO/v2">
 </v2:messageHeader>
 
 
+
 <oas:Security>
 
 <oas:UsernameToken>
 
 <oas:Username>
-{Config.CCEE_USERNAME}
+{usuario}
 </oas:Username>
 
 <oas:Password>
-{Config.CCEE_PASSWORD}
+{senha}
 </oas:Password>
 
 </oas:UsernameToken>
 
 </oas:Security>
+
 
 
 <v2:paginacao>
@@ -69,6 +83,7 @@ xmlns:v22="http://xmlns.energia.org.br/BO/v2">
 </v2:quantidadeItens>
 
 </v2:paginacao>
+
 
 
 </soapenv:Header>
@@ -92,9 +107,11 @@ CARGA
 </v22:tipo>
 
 
+
 <v22:parcelasAtivo>
 
 <v22:parcelaAtivo>
+
 
 <v22:participanteMercado>
 
@@ -110,10 +127,12 @@ CARGA
 </v22:parcelasAtivo>
 
 
+
 </v21:ativoMedicao>
 
 
 </v21:listarAtivoMedicaoRequest>
+
 
 
 </soapenv:Body>
