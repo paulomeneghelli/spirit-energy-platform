@@ -8,6 +8,7 @@ from routes.api_routes import api
 from routes.agente_routes import agente_bp
 from routes.sincronizacao_routes import sincronizacao_bp
 from routes.contrato_routes import contrato_bp
+from routes.modulos_routes import modulos_bp
 from models.agente import Agente
 
 
@@ -72,6 +73,11 @@ def create_app():
 
     app.register_blueprint(
         contrato_bp
+    )
+
+
+    app.register_blueprint(
+        modulos_bp
     )
 
     # =========================

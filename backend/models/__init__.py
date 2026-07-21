@@ -3,6 +3,7 @@ from models.agente import Agente
 from models.contrato import Contrato
 from models.consumo import Consumo
 from models.medicao import Medicao
+from models.ativo_medicao import AtivoMedicao
 from models.pld import PLD
 from models.sincronizacao import Sincronizacao
 from models.liquidacao import Liquidacao

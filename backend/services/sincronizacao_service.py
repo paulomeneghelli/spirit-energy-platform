@@ -4,12 +4,21 @@ from repositories.sincronizacao_repository import (
     SincronizacaoRepository
 )
 
+from services.ativo_medicao_service import (
+    AtivoMedicaoService
+)
+
+
 
 class SincronizacaoService:
+
 
     def __init__(self):
 
         self.repository = SincronizacaoRepository()
+
+        self.ativo_medicao_service = AtivoMedicaoService()
+
 
 
     def listar(self):
@@ -17,11 +26,13 @@ class SincronizacaoService:
         return self.repository.listar()
 
 
+
     def ultima_sincronizacao(self, modulo):
 
         return self.repository.ultima_sincronizacao(
             modulo
         )
+
 
 
     def registrar(
@@ -55,9 +66,8 @@ class SincronizacaoService:
         })
 
 
-    def sincronizar_agentes(self):
 
-        # Aqui entra a integração CCEE
+    def sincronizar_agentes(self):
 
         return self.registrar(
 
@@ -70,6 +80,7 @@ class SincronizacaoService:
             registros=0
 
         )
+
 
 
     def sincronizar_contratos(self):
@@ -87,6 +98,7 @@ class SincronizacaoService:
         )
 
 
+
     def sincronizar_consumo(self):
 
         return self.registrar(
@@ -102,6 +114,7 @@ class SincronizacaoService:
         )
 
 
+
     def sincronizar_pld(self):
 
         return self.registrar(
@@ -115,6 +128,41 @@ class SincronizacaoService:
             registros=0
 
         )
+
+
+
+    def sincronizar_ativos(
+
+        self,
+
+        agente_id,
+
+        codigo_agente
+
+    ):
+
+
+        ativos = self.ativo_medicao_service.sincronizar_ativos(
+
+            agente_id,
+
+            codigo_agente
+
+        )
+
+
+        return self.registrar(
+
+            modulo="Ativos Medição",
+
+            status="Sucesso",
+
+            mensagem="Ativos de medição sincronizados.",
+
+            registros=len(ativos)
+
+        )
+
 
 
     def sincronizar_tudo(self):

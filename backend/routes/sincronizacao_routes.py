@@ -110,4 +110,22 @@ def sincronizar_tudo():
         )
 
     )
+
+@sincronizacao_bp.route("/sincronizar/ativos/<int:agente_id>/<codigo_agente>")
+def sincronizar_ativos(agente_id, codigo_agente):
+
+    service.sincronizar_ativos(
+        agente_id,
+        codigo_agente
+    )
+
+    return redirect(
+
+        url_for(
+
+            "sincronizacao.sincronizacoes"
+
+        )
+
+    )
     

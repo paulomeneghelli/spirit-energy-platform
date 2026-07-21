@@ -51,7 +51,7 @@ class Config:
 
     CCEE_URL = os.getenv(
         "CCEE_URL",
-        "https://api.ccee.org.br"
+        "https://servicos.ccee.org.br:443"
     )
 
 
