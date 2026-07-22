@@ -12,3 +12,10 @@ def energy_analytics():
     return render_template(
         "energy_analytics.html"
     )
+
+
+@energy_analytics_bp.route("/energy-analytics/tarifa-verde-azul")
+def tarifa_verde_azul():
+    return render_template(
+        "analytics/tarifa_verde_azul.html"
+    )
