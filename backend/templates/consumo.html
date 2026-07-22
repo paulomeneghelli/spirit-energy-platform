@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="page fade-in">
+
+    <h2 class="page-title">
+        Consumo de Energia
+    </h2>
+
+    <p class="subtitle">
+        Acompanhamento do consumo dos agentes integrados ao Mercado Livre de Energia.
+    </p>
+
+
+    <div class="row">
+
+
+        <div class="col-lg-4 mb-4">
+
+            <div class="card indicator-card">
+
+                <div>
+
+                    <div class="indicator-title">
+                        Consumo Atual
+                    </div>
+
+                    <div class="indicator-value">
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="indicator-icon">
+
+                    <i class="bi bi-lightning-charge"></i>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-4 mb-4">
+
+            <div class="card indicator-card">
+
+                <div>
+
+                    <div class="indicator-title">
+                        Última Atualização
+                    </div>
+
+                    <div class="indicator-value">
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="indicator-icon">
+
+                    <i class="bi bi-clock-history"></i>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-4 mb-4">
+
+            <div class="card indicator-card">
+
+                <div>
+
+                    <div class="indicator-title">
+                        Fonte
+                    </div>
+
+                    <div class="indicator-value">
+                        CCEE
+                    </div>
+
+                </div>
+
+
+                <div class="indicator-icon">
+
+                    <i class="bi bi-database"></i>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <div class="table-container">
+
+        <h5 class="text-primary mb-4">
+            Histórico de Consumo
+        </h5>
+
+
+        <table class="table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Data
+                    </th>
+
+                    <th>
+                        Agente
+                    </th>
+
+                    <th>
+                        Energia (MWh)
+                    </th>
+
+                    <th>
+                        Origem
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                <tr>
+
+                    <td colspan="4" class="text-center">
+
+                        Aguardando integração CCEE
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

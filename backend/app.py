@@ -10,6 +10,7 @@ from routes.sincronizacao_routes import sincronizacao_bp
 from routes.contrato_routes import contrato_bp
 from routes.modulos_routes import modulos_bp
 from models.agente import Agente
+from services.dashboard_service import DashboardService
 
 
 def create_app():
@@ -87,14 +88,24 @@ def create_app():
     @app.route("/")
     def dashboard():
 
-        quantidade_agentes = Agente.query.count()
+
+        dashboard_service = DashboardService()
+
+
+        indicadores = dashboard_service.indicadores()
+
 
         agentes = Agente.query.all()
 
+
         return render_template(
+
             "dashboard.html",
-            quantidade_agentes=quantidade_agentes,
+
+            indicadores=indicadores,
+
             agentes=agentes
+
         )
 
 
