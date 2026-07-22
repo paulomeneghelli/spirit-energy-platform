@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+
+{% block styles %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics/analytics.css') }}">
+
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="analytics-page">
+
+
+    <div class="analytics-header">
+
+        <h1>
+            📊 Energy Analytics
+        </h1>
+
+        <p>
+            Central de inteligência energética do SPIRIT ENERGY PLATFORM
+        </p>
+
+    </div>
+
+
+
+    <div class="analytics-grid">
+
+
+        <div class="analytics-module">
+
+            <div class="module-icon">
+                ⚡
+            </div>
+
+            <div>
+
+                <h3>
+                    Simulador Tarifa Verde x Azul
+                </h3>
+
+                <p>
+                    Analise oportunidades de economia
+                    entre modalidades tarifárias.
+                </p>
+
+                <a href="/energy-analytics/tarifa-verde-azul">
+                    Abrir estudo →
+                </a>
+
+            </div>
+
+        </div>
+
+
+
+
+        <div class="analytics-module">
+
+            <div class="module-icon">
+                📈
+            </div>
+
+            <div>
+
+                <h3>
+                    Curva de Carga
+                </h3>
+
+                <p>
+                    Avalie o comportamento de consumo
+                    e demanda da unidade.
+                </p>
+
+                <span>
+                    Em desenvolvimento
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+
+
+        <div class="analytics-module">
+
+            <div class="module-icon">
+                💰
+            </div>
+
+            <div>
+
+                <h3>
+                    Exposição ao PLD
+                </h3>
+
+                <p>
+                    Analise riscos e impactos do mercado.
+                </p>
+
+                <span>
+                    Em desenvolvimento
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+
+
+        <div class="analytics-module">
+
+            <div class="module-icon">
+                📄
+            </div>
+
+            <div>
+
+                <h3>
+                    Gestão Contratual
+                </h3>
+
+                <p>
+                    Avalie contratos, flexibilidade
+                    e oportunidades.
+                </p>
+
+                <span>
+                    Em desenvolvimento
+                </span>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+</div>
+
+
+{% endblock %}
