@@ -1,36 +1,2142 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics/tarifa_verde_azul.css') }}">
+{% endblock %}
+
+
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics/tarifa_verde_azul.css') }}">
+<div class="app">
 
-<div class="analytics-container">
+<header class="no-print">
+  <div class="brand-block" aria-label="Grupo Spirit Energia">
+    <img class="brand-logo" src="{{ url_for('static', filename='img/analytics/logo-spirit-energia.png') }}" alt="Grupo Spirit Energia">
+  </div>
+  <div class="header-content">
+    <div class="header-titles">
+      <div class="brand-text-grupo">Grupo Spirit</div>
+      <h1>Comparativo de Modalidade Tarifária</h1>
+      <div class="subtitle">Horo-Sazonal Azul × Verde — Qual é a melhor opção?</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="newSimulation()">+ Nova Simulação</button>
+      <button class="btn btn-ghost" onclick="showSimulationsList()">📁 Simulações</button>
+      <button class="btn btn-ghost" onclick="saveSimulationToList()">💾 Salvar</button>
+      <button class="btn" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+  </div>
+</header>
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
+<nav class="tabs no-print">
+  <button class="tab active" data-tab="cliente" onclick="switchTab(&#39;cliente&#39;)">1. Cliente</button>
+  <button class="tab" data-tab="tarifas" onclick="switchTab(&#39;tarifas&#39;)">2. Tarifas</button>
+  <button class="tab" data-tab="consumo" onclick="switchTab(&#39;consumo&#39;)">3. Consumo Histórico</button>
+  <button class="tab" data-tab="tributos" onclick="switchTab(&#39;tributos&#39;)">4. Tributos</button>
+  <button class="tab" data-tab="resultado" onclick="switchTab(&#39;resultado&#39;)">5. Resultado</button>
+</nav>
 
+<main>
+
+<!-- 1. CLIENTE -->
+<section class="section active" id="section-cliente">
+  <div class="section-header">
     <div>
-      <h2>⚡ Tarifa Verde x Azul</h2>
-      <p class="text-muted mb-0">
-        Estudo comparativo de modalidades tarifárias.
-      </p>
+      <h2>Dados do Cliente</h2>
+      <p>Informações cadastrais da unidade consumidora</p>
+    </div>
+  </div>
+
+  <div class="card" style="background: linear-gradient(135deg, #eef2f8 0%, #f0f5ec 100%); border-left: 4px solid var(--accent);">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 260px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+          <span style="font-size: 24px;">📄</span>
+          <strong style="color: var(--primary); font-size: 15px;">Importar dados da Fatura</strong>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted);">
+          Faça upload do PDF da fatura para ler <strong>dados cadastrais</strong> (Razão Social, CNPJ, UC, Classe, Modalidade) e <strong>volumes de consumo</strong> do mês (Demanda e Consumo Ponta/Fora Ponta). As tarifas devem ser informadas manualmente na aba Tarifas.
+        </p>
+      </div>
+      <div>
+        <button class="btn" onclick="document.getElementById(&#39;faturaUpload&#39;).click()">📤 Selecionar PDF</button>
+        <input type="file" id="faturaUpload" accept=".pdf,application/pdf" onchange="handleFaturaUpload(event)">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="display:flex; align-items:center; justify-content:space-between;">
+      <span>Identificação</span>
+      <button class="btn btn-ghost" style="font-size:11px; padding:3px 10px;" onclick="limparCadastroCliente()" title="Limpa todos os campos de identificação do cliente">🗑 Limpar Cadastro</button>
+    </div>
+    <div class="grid grid-3">
+      <div class="field"><label>Nome do Cliente</label><input type="text" data-bind="cliente.nome" placeholder="Razão Social / Nome"></div>
+      <div class="field"><label>CNPJ / CPF</label><input type="text" data-bind="cliente.cnpj" placeholder="00.000.000/0001-00"></div>
+      <div class="field"><label>Responsável</label><input type="text" data-bind="cliente.responsavel" placeholder="Nome do responsável"></div>
+    </div>
+    <div class="grid" style="grid-template-columns: 3fr 1fr 1fr; gap: 14px; margin-top: 14px;">
+      <div class="field"><label>Endereço</label><input type="text" data-bind="cliente.endereco" placeholder="Rua, número, bairro"></div>
+      <div class="field"><label>Cidade</label><input type="text" data-bind="cliente.cidade"></div>
+      <div class="field"><label>CEP</label><input type="text" data-bind="cliente.cep" placeholder="00000-000"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Unidade Consumidora</div>
+    <div class="grid grid-4">
+      <div class="field">
+        <label>Distribuidora</label>
+        <select id="distribuidoraSelectCliente" onchange="onDistribuidoraSelect(this.value)"><option value="">— selecione —</option><option value="celesc" selected="">CELESC (SC)</option><option value="copel">COPEL (PR)</option><option value="cemig">CEMIG (MG)</option><option value="cpfl">CPFL Paulista (SP)</option><option value="enel-sp">ENEL SP (SP)</option><option value="rge">RGE (RS)</option><option value="dist-1783422239387">ÂMBAR ENERGIA (AM)</option></select>
+        <span class="hint">Gerencie em "Tarifas"</span>
+      </div>
+      <div class="field"><label>UC (Nº Instalação)</label><input type="text" data-bind="cliente.uc"></div>
+      <div class="field">
+        <label>Classe / Tensão</label>
+        <select data-bind="cliente.classe">
+          <option value="A4">A4 (2,3 a 25 kV)</option>
+          <option value="A3a">A3a (30 a 44 kV)</option>
+          <option value="A3">A3 (69 kV)</option>
+          <option value="A2">A2 (88 a 138 kV)</option>
+          <option value="A1">A1 (≥ 230 kV)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Modalidade Tarifária Atual</label>
+        <select data-bind="cliente.modalidadeAtual" onchange="saveCurrent();recalc();">
+          <option value="VERDE">VERDE</option>
+          <option value="AZUL">AZUL</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid grid-3" style="margin-top: 14px;">
+      <div class="field">
+        <label>Demanda Contratada Ponta (kW)</label>
+        <div class="suffix-wrap"><input type="number" step="any" data-bind="cliente.demandaContratadaPonta" placeholder="Apenas Azul"><span class="suffix">kW</span></div>
+        <span class="hint">Deixe vazio se tarifa Verde</span>
+      </div>
+      <div class="field">
+        <label>Demanda Contratada F. Ponta (kW)</label>
+        <div class="suffix-wrap"><input type="number" step="any" data-bind="cliente.demandaContratadaForaPonta"><span class="suffix">kW</span></div>
+      </div>
+      <div class="field">
+        <label>Observações</label>
+        <input type="text" data-bind="cliente.obs" placeholder="Notas ou observações">
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:right;" class="no-print">
+    <button class="btn" onclick="switchTab(&#39;tarifas&#39;)">Próximo: Tarifas →</button>
+  </div>
+</section>
+
+<!-- 2. TARIFAS -->
+<section class="section" id="section-tarifas">
+  <div class="section-header">
+    <div>
+      <h2>Tarifas da Distribuidora</h2>
+      <p>Tarifas <strong>pré-impostos</strong> homologadas pela ANEEL (TUSD + TE base). Os tributos são configurados na aba Tributos.</p>
+    </div>
+  </div>
+
+  <div class="warn-banner" style="margin-bottom: 16px;">
+    ⚠ <strong>Importante:</strong> use as <strong>tarifas homologadas pela ANEEL</strong>, antes de impostos. <strong>Não use os valores da fatura</strong> — eles já vêm com tributos.
+  </div>
+
+  <div class="card">
+    <div class="card-title">Catálogo de Distribuidoras
+      <span class="card-subtitle">R$/kW para demandas · R$/kWh para consumos e TUSD</span>
+    </div>
+    <div class="grid" style="grid-template-columns: 2fr 1fr 1fr auto auto auto; gap: 10px; align-items: end;">
+      <div class="field">
+        <label>Distribuidora selecionada</label>
+        <select id="distribuidoraSelect" onchange="applyDistribuidora(this.value)"><option value="celesc" selected="">CELESC (SC)</option><option value="copel">COPEL (PR)</option><option value="cemig">CEMIG (MG)</option><option value="cpfl">CPFL Paulista (SP)</option><option value="enel-sp">ENEL SP (SP)</option><option value="rge">RGE (RS)</option><option value="dist-1783422239387">ÂMBAR ENERGIA (AM)</option></select>
+      </div>
+      <div class="field"><label>Estado (UF)</label><input type="text" id="distribuidoraEstado" maxlength="2" placeholder="UF" style="text-transform:uppercase;"></div>
+      <div class="field"><label>Nome</label><input type="text" id="distribuidoraNome" placeholder="Ex: CELESC, COPEL…"></div>
+      <button class="btn btn-sm" onclick="saveDistribuidoraEdits()" title="Salvar">💾 Salvar</button>
+      <button class="btn btn-secondary btn-sm" onclick="addNewDistribuidora()">+ Nova</button>
+      <button class="btn btn-secondary btn-sm" onclick="deleteDistribuidora()">🗑</button>
+    </div>
+    <div class="info-banner" style="margin-top:14px;">
+      Selecione uma distribuidora para carregar as tarifas. Para criar nova, clique <strong>+ Nova</strong>, preencha e clique <strong>💾 Salvar</strong>.
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-title"><span class="tag-azul">AZUL</span> — Tarifas Horo-Sazonal Azul</div>
+      <div class="grid grid-2">
+        <div class="field"><label>Demanda Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.azul.demandaPonta"><span class="suffix">R$/kW</span></div></div>
+        <div class="field"><label>Demanda Fora Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.azul.demandaForaPonta"><span class="suffix">R$/kW</span></div></div>
+        <div class="field"><label>TUSD Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.azul.tusdPonta"><span class="suffix">R$/kWh</span></div></div>
+        <div class="field"><label>TUSD Fora Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.azul.tusdForaPonta"><span class="suffix">R$/kWh</span></div></div>
+        <div class="field"><label>TE Ponta (Consumo Ponta)</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.azul.tePonta"><span class="suffix">R$/kWh</span></div></div>
+        <div class="field"><label>TE Fora Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.azul.teForaPonta"><span class="suffix">R$/kWh</span></div></div>
+        <div class="field"><label>Ultrapassagem Demanda</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.azul.ultrapassagem"><span class="suffix">R$/kW</span></div>
+          <span class="hint">Aplica na demanda medida que excede a contratada</span></div>
+      </div>
     </div>
 
-    <a href="{{ url_for('energy_analytics.energy_analytics') }}" class="btn btn-outline-primary">
-      ← Voltar
-    </a>
-
+    <div class="card">
+      <div class="card-title"><span class="tag-verde">VERDE</span> — Tarifas Horo-Sazonal Verde</div>
+      <div class="grid grid-2">
+        <div class="field"><label>Demanda Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.verde.demandaPonta" value="0"><span class="suffix">R$/kW</span></div>
+          <span class="hint">Normalmente 0 na tarifa Verde</span></div>
+        <div class="field"><label>Demanda Fora Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.verde.demandaForaPonta"><span class="suffix">R$/kW</span></div></div>
+        <div class="field"><label>TUSD Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.verde.tusdPonta"><span class="suffix">R$/kWh</span></div>
+          <span class="hint">Geralmente maior que na Azul</span></div>
+        <div class="field"><label>TUSD Fora Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.verde.tusdForaPonta"><span class="suffix">R$/kWh</span></div></div>
+        <div class="field"><label>TE Ponta (Consumo Ponta)</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.verde.tePonta"><span class="suffix">R$/kWh</span></div></div>
+        <div class="field"><label>TE Fora Ponta</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.verde.teForaPonta"><span class="suffix">R$/kWh</span></div></div>
+        <div class="field"><label>Ultrapassagem Demanda</label>
+          <div class="suffix-wrap"><input type="number" step="any" data-bind="tarifas.verde.ultrapassagem" value="0"><span class="suffix">R$/kW</span></div></div>
+      </div>
+    </div>
   </div>
 
-  <div id="simulador-verde-azul">
+  <div style="display:flex; justify-content:space-between;" class="no-print">
+    <button class="btn btn-secondary" onclick="switchTab(&#39;cliente&#39;)">← Cliente</button>
+    <button class="btn" onclick="switchTab(&#39;consumo&#39;)">Próximo: Consumo →</button>
+  </div>
+</section>
 
-    <!--
-            Aqui nós vamos colocar o simulador.
-        -->
-
+<!-- 3. CONSUMO -->
+<section class="section" id="section-consumo">
+  <div class="section-header">
+    <div>
+      <h2>Histórico de Consumo (12 meses)</h2>
+      <p>Preencha os últimos 12 meses de consumo e demanda medidos</p>
+    </div>
+    <div class="row-flex no-print">
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById(&#39;csvInput&#39;).click()">📥 Importar CSV</button>
+      <input type="file" id="csvInput" accept=".csv" onchange="importCSV(event)">
+      <button class="btn btn-secondary btn-sm" onclick="exportarCSVConsumo()">⬇️ Exportar CSV</button>
+      <button class="btn btn-secondary btn-sm" onclick="downloadCSVTemplate()">📄 Modelo CSV</button>
+    </div>
   </div>
 
+  <div class="info-banner">
+    <strong>Dica:</strong> O cálculo usa a <strong>média</strong> dos 12 meses como base. Preencha todos os meses para maior precisão.
+    O botão <strong>📥 Importar CSV</strong> aceita dois formatos: (1) CSV exportado pelo botão "📄 Modelo CSV" ou (2) <strong>CSV do Histórico de Consumo</strong> gerado a partir da fatura (primeira coluna = "Grandeza", colunas seguintes = meses — padrão CELESC/COPEL).
+  </div>
+
+  <div class="card">
+    <div class="card-title">Medições Mensais</div>
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="consumoTable">
+        <thead>
+          <tr>
+            <th>Mês / Referência</th>
+            <th class="num">Demanda Ponta (kW)</th>
+            <th class="num">Demanda F. Ponta (kW)</th>
+            <th class="num">Consumo Ponta (kWh)</th>
+            <th class="num">Consumo F. Ponta (kWh)</th>
+            <th class="no-print" style="width:40px;"></th>
+          </tr>
+        </thead>
+        <tbody id="consumoBody"><tr>
+      <td><input type="text" data-bind-consumo="0:mes" value="04/26" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="0:demandaPonta" value="795"></td>
+      <td><input type="number" step="any" data-bind-consumo="0:demandaForaPonta" value="1034"></td>
+      <td><input type="number" step="any" data-bind-consumo="0:consumoPonta" value="42381"></td>
+      <td><input type="number" step="any" data-bind-consumo="0:consumoForaPonta" value="353669"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(0)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="1:mes" value="03/26" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="1:demandaPonta" value="783"></td>
+      <td><input type="number" step="any" data-bind-consumo="1:demandaForaPonta" value="1024"></td>
+      <td><input type="number" step="any" data-bind-consumo="1:consumoPonta" value="46312"></td>
+      <td><input type="number" step="any" data-bind-consumo="1:consumoForaPonta" value="398281"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(1)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="2:mes" value="02/26" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="2:demandaPonta" value="763"></td>
+      <td><input type="number" step="any" data-bind-consumo="2:demandaForaPonta" value="994"></td>
+      <td><input type="number" step="any" data-bind-consumo="2:consumoPonta" value="38859"></td>
+      <td><input type="number" step="any" data-bind-consumo="2:consumoForaPonta" value="335586"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(2)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="3:mes" value="01/26" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="3:demandaPonta" value="744"></td>
+      <td><input type="number" step="any" data-bind-consumo="3:demandaForaPonta" value="1007"></td>
+      <td><input type="number" step="any" data-bind-consumo="3:consumoPonta" value="38383"></td>
+      <td><input type="number" step="any" data-bind-consumo="3:consumoForaPonta" value="320382"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(3)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="4:mes" value="12/25" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="4:demandaPonta" value="692"></td>
+      <td><input type="number" step="any" data-bind-consumo="4:demandaForaPonta" value="915"></td>
+      <td><input type="number" step="any" data-bind-consumo="4:consumoPonta" value="26083"></td>
+      <td><input type="number" step="any" data-bind-consumo="4:consumoForaPonta" value="220575"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(4)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="5:mes" value="11/25" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="5:demandaPonta" value="691"></td>
+      <td><input type="number" step="any" data-bind-consumo="5:demandaForaPonta" value="943"></td>
+      <td><input type="number" step="any" data-bind-consumo="5:consumoPonta" value="30149"></td>
+      <td><input type="number" step="any" data-bind-consumo="5:consumoForaPonta" value="267230"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(5)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="6:mes" value="10/25" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="6:demandaPonta" value="616"></td>
+      <td><input type="number" step="any" data-bind-consumo="6:demandaForaPonta" value="732"></td>
+      <td><input type="number" step="any" data-bind-consumo="6:consumoPonta" value="35168"></td>
+      <td><input type="number" step="any" data-bind-consumo="6:consumoForaPonta" value="282655"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(6)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="7:mes" value="09/25" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="7:demandaPonta" value="612"></td>
+      <td><input type="number" step="any" data-bind-consumo="7:demandaForaPonta" value="774"></td>
+      <td><input type="number" step="any" data-bind-consumo="7:consumoPonta" value="35059"></td>
+      <td><input type="number" step="any" data-bind-consumo="7:consumoForaPonta" value="271204"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(7)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="8:mes" value="08/25" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="8:demandaPonta" value="633"></td>
+      <td><input type="number" step="any" data-bind-consumo="8:demandaForaPonta" value="763"></td>
+      <td><input type="number" step="any" data-bind-consumo="8:consumoPonta" value="34982"></td>
+      <td><input type="number" step="any" data-bind-consumo="8:consumoForaPonta" value="283070"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(8)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="9:mes" value="07/25" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="9:demandaPonta" value="608"></td>
+      <td><input type="number" step="any" data-bind-consumo="9:demandaForaPonta" value="776"></td>
+      <td><input type="number" step="any" data-bind-consumo="9:consumoPonta" value="38046"></td>
+      <td><input type="number" step="any" data-bind-consumo="9:consumoForaPonta" value="305728"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(9)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="10:mes" value="06/25" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="10:demandaPonta" value="635"></td>
+      <td><input type="number" step="any" data-bind-consumo="10:demandaForaPonta" value="778"></td>
+      <td><input type="number" step="any" data-bind-consumo="10:consumoPonta" value="32503"></td>
+      <td><input type="number" step="any" data-bind-consumo="10:consumoForaPonta" value="275797"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(10)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr><tr>
+      <td><input type="text" data-bind-consumo="11:mes" value="05/25" placeholder="mm/aaaa" style="text-align:left;width:100%;border:1px solid transparent;padding:4px 6px;border-radius:4px;background:transparent;font-family:inherit;font-size:13px;" onfocus="this.style.borderColor=&#39;var(--accent)&#39;;this.style.background=&#39;white&#39;;" onblur="this.style.borderColor=&#39;transparent&#39;;this.style.background=&#39;transparent&#39;"></td>
+      <td><input type="number" step="any" data-bind-consumo="11:demandaPonta" value="609"></td>
+      <td><input type="number" step="any" data-bind-consumo="11:demandaForaPonta" value="775"></td>
+      <td><input type="number" step="any" data-bind-consumo="11:consumoPonta" value="34267"></td>
+      <td><input type="number" step="any" data-bind-consumo="11:consumoForaPonta" value="283227"></td>
+      <td class="no-print" style="text-align:center;">
+        <button type="button" onclick="deleteConsumoRow(11)" style="background:transparent;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background=&#39;#fbe6e6&#39;" onmouseout="this.style.background=&#39;transparent&#39;">🗑</button>
+      </td></tr></tbody>
+        <tfoot>
+          <tr class="totals">
+            <td><strong>Média</strong></td>
+            <td class="num" id="avg-dp">681,8</td>
+            <td class="num" id="avg-dfp">876,3</td>
+            <td class="num" id="avg-cp">36.016</td>
+            <td class="num" id="avg-cfp">299.784</td>
+            <td class="no-print"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between;" class="no-print">
+    <button class="btn btn-secondary" onclick="switchTab(&#39;tarifas&#39;)">← Tarifas</button>
+    <button class="btn" onclick="switchTab(&#39;tributos&#39;)">Próximo: Tributos →</button>
+  </div>
+</section>
+
+<!-- 4. TRIBUTOS -->
+<section class="section" id="section-tributos">
+  <div class="section-header">
+    <div>
+      <h2>Tributos</h2>
+      <p>Alíquotas de ICMS e PIS/COFINS aplicadas sobre a fatura de energia</p>
+    </div>
+  </div>
+
+  <div class="card" style="max-width: 600px;">
+    <div class="card-title">Alíquotas de Tributos</div>
+    <div class="grid grid-2">
+      <div class="field">
+        <label>ICMS</label>
+        <div class="suffix-wrap"><input type="number" step="any" data-bind="tributos.icmsPct" value="17"><span class="suffix">%</span></div>
+        <span class="hint">Varia por estado. Ex: SC=17%, PR=29%, SP=25%</span>
+      </div>
+      <div class="field">
+        <label>PIS/COFINS</label>
+        <div class="suffix-wrap"><input type="number" step="any" data-bind="tributos.pisCofinsPct" value="1.98"><span class="suffix">%</span></div>
+        <span class="hint">Alíquota efetiva padrão: 1,98%</span>
+      </div>
+    </div>
+    <div class="info-banner" style="margin-top:14px;">
+      Os tributos são aplicados via <strong>gross-up</strong>: a tarifa base é ampliada para incluir ICMS e PIS/COFINS. A demanda contratada não utilizada (isenta de ICMS pelo § 3º da LC 87/96) é tratada separadamente.
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between;" class="no-print">
+    <button class="btn btn-secondary" onclick="switchTab(&#39;consumo&#39;)">← Consumo</button>
+    <button class="btn" onclick="switchTab(&#39;resultado&#39;);recalc();">Ver Resultado →</button>
+  </div>
+</section>
+
+<!-- 5. RESULTADO -->
+<section class="section" id="section-resultado">
+  <div class="section-header">
+    <div>
+      <h2>Resultado</h2>
+      <p>Comparativo Azul × Verde com base no consumo médio dos últimos 12 meses</p>
+    </div>
+    <div class="no-print">
+      <button class="btn btn-secondary btn-sm" onclick="recalc()">🔄 Recalcular</button>
+    </div>
+  </div>
+  <div id="resultadoContent">
+    <div class="same-modality-banner">
+        ⚡ <strong>Recomendação:</strong> trocar de <strong>VERDE</strong> para <strong>AZUL</strong>
+        — economia estimada de <strong>R$ 4.660,98/mês</strong>
+        (<strong>R$ 55.931,70</strong> nos 12 meses analisados).
+       </div>
+
+    <!-- RESUMO -->
+    <div class="summary-grid">
+      <div class="kpi primary">
+        <div class="label">Meses analisados</div>
+        <div class="value">12</div>
+        <div class="sub">com dados válidos</div>
+      </div>
+      <div class="kpi success">
+        <div class="label">Média/mês — AZUL</div>
+        <div class="value" style="font-size:16px;">R$ 248.073</div>
+        <div class="sub">✅ mais barata · 10 meses mais barato</div>
+      </div>
+      <div class="kpi primary">
+        <div class="label">Média/mês — VERDE</div>
+        <div class="value" style="font-size:16px;">R$ 252.734</div>
+        <div class="sub"> · 2 meses mais barato</div>
+      </div>
+      <div class="kpi" style="border-top:3px solid var(--success); background:#fff5d4;">
+        <div class="label">Economia média/mês</div>
+        <div class="value" style="font-size:16px; color:var(--success);">R$ 4.661</div>
+        <div class="sub">AZUL mais barata · total R$ 55.932</div>
+      </div>
+    </div>
+
+    <!-- CARDS COMPARATIVOS -->
+    <div class="grid grid-2" style="margin-bottom:16px;">
+      <div class="result-winner">
+        <span class="result-badge badge-winner">✅ Melhor opção</span>
+        
+        <div class="modality-name" style="color:var(--primary)">AZUL</div>
+        <div class="modality-cost">R$ 248.073<span style="font-size:13px;font-weight:400;">/mês</span></div>
+        <div class="modality-cost-sub">10 meses mais barata · total R$ 2.976.879</div>
+      </div>
+      <div class="result-loser">
+        
+        <span class="result-badge badge-current" style="margin-left:6px;">Atual</span>
+        <div class="modality-name" style="color:var(--text-muted)">VERDE</div>
+        <div class="modality-cost">R$ 252.734<span style="font-size:13px;font-weight:400;">/mês</span></div>
+        <div class="modality-cost-sub">2 meses mais barata · total R$ 3.032.811</div>
+      </div>
+    </div>
+
+    <!-- TABELA MENSAL -->
+    <div class="card">
+      <div class="card-title">
+        Comparativo Mensal — Azul × Verde
+        <span class="card-subtitle">Custo calculado individualmente para cada mês · valores em R$</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="monthly-table">
+          <thead>
+            <tr>
+              <th class="group-mes" rowspan="2" style="text-align:left; min-width:80px;">Mês</th>
+              <th class="group-mes" colspan="7" style="border-bottom:1px solid rgba(255,255,255,0.2);">Volumes Medidos</th>
+              <th class="group-azul" colspan="2" style="border-bottom:1px solid rgba(255,255,255,0.2);">Simulação (R$)</th>
+              <th class="group-mes" rowspan="2">Diferença (R$)</th>
+              <th class="group-mes" rowspan="2">Melhor</th>
+            </tr>
+            <tr>
+              <th class="group-mes">Dem. P (kW)</th>
+              <th class="group-mes">D.P. Isenta</th>
+              <th class="group-mes">Dem. FP (kW)</th>
+              <th class="group-mes">D.FP Isenta</th>
+              <th class="group-mes">Ultrap. (kW)</th>
+              <th class="group-mes">Cons. P (kWh)</th>
+              <th class="group-mes">Cons. FP (kWh)</th>
+              <th class="group-azul">AZUL</th>
+              <th class="group-verde" style="background:#4a7e44;">VERDE</th>
+            </tr>
+          </thead>
+          <tbody><tr>
+      <td class="col-mes">04/26</td>
+      <td>795,0</td>
+      <td>0,0</td>
+      <td>1.034,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>42.381</td>
+      <td>353.669</td>
+      <td class="winner-azul" style="background:#dde6f0">286.596,31</td>
+      <td class="" style="background:">297.593,90</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 10.997,59
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">03/26</td>
+      <td>783,0</td>
+      <td>12,0</td>
+      <td>1.024,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>46.312</td>
+      <td>398.281</td>
+      <td class="winner-azul" style="background:#dde6f0">313.746,24</td>
+      <td class="" style="background:">329.308,99</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 15.562,75
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">02/26</td>
+      <td>763,0</td>
+      <td>32,0</td>
+      <td>994,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>38.859</td>
+      <td>335.586</td>
+      <td class="winner-azul" style="background:#dde6f0">272.829,98</td>
+      <td class="" style="background:">280.077,40</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 7.247,42
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">01/26</td>
+      <td>744,0</td>
+      <td>51,0</td>
+      <td>1.007,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>38.383</td>
+      <td>320.382</td>
+      <td class="winner-azul" style="background:#dde6f0">264.273,48</td>
+      <td class="" style="background:">271.130,77</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 6.857,29
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">12/25</td>
+      <td>692,0</td>
+      <td>103,0</td>
+      <td>915,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>26.083</td>
+      <td>220.575</td>
+      <td class="" style="background:">197.657,02</td>
+      <td class="winner-verde" style="background:#e2efde">190.942,22</td>
+      <td style="text-align:center; color:#c84545; font-size:11px;">
+        ▲ 6.714,80
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-verde">VERDE</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">11/25</td>
+      <td>691,0</td>
+      <td>104,0</td>
+      <td>943,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>30.149</td>
+      <td>267.230</td>
+      <td class="" style="background:">226.962,51</td>
+      <td class="winner-verde" style="background:#e2efde">224.878,89</td>
+      <td style="text-align:center; color:#c84545; font-size:11px;">
+        ▲ 2.083,62
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-verde">VERDE</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">10/25</td>
+      <td>616,0</td>
+      <td>179,0</td>
+      <td>732,0</td>
+      <td>68,0</td>
+      <td>0,0</td>
+      <td>35.168</td>
+      <td>282.655</td>
+      <td class="winner-azul" style="background:#dde6f0">235.251,51</td>
+      <td class="" style="background:">239.471,17</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 4.219,66
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">09/25</td>
+      <td>612,0</td>
+      <td>183,0</td>
+      <td>774,0</td>
+      <td>26,0</td>
+      <td>0,0</td>
+      <td>35.059</td>
+      <td>271.204</td>
+      <td class="winner-azul" style="background:#dde6f0">229.022,75</td>
+      <td class="" style="background:">233.150,29</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 4.127,54
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">08/25</td>
+      <td>633,0</td>
+      <td>162,0</td>
+      <td>763,0</td>
+      <td>37,0</td>
+      <td>0,0</td>
+      <td>34.982</td>
+      <td>283.070</td>
+      <td class="winner-azul" style="background:#dde6f0">235.587,61</td>
+      <td class="" style="background:">239.460,58</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 3.872,98
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">07/25</td>
+      <td>608,0</td>
+      <td>187,0</td>
+      <td>776,0</td>
+      <td>24,0</td>
+      <td>0,0</td>
+      <td>38.046</td>
+      <td>305.728</td>
+      <td class="winner-azul" style="background:#dde6f0">250.212,49</td>
+      <td class="" style="background:">257.768,19</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 7.555,70
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">06/25</td>
+      <td>635,0</td>
+      <td>160,0</td>
+      <td>778,0</td>
+      <td>22,0</td>
+      <td>0,0</td>
+      <td>32.503</td>
+      <td>275.797</td>
+      <td class="winner-azul" style="background:#dde6f0">229.763,38</td>
+      <td class="" style="background:">230.801,72</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 1.038,34
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr><tr>
+      <td class="col-mes">05/25</td>
+      <td>609,0</td>
+      <td>186,0</td>
+      <td>775,0</td>
+      <td>25,0</td>
+      <td>0,0</td>
+      <td>34.267</td>
+      <td>283.227</td>
+      <td class="winner-azul" style="background:#dde6f0">234.976,19</td>
+      <td class="" style="background:">238.227,05</td>
+      <td style="text-align:center; color:#4a9968; font-size:11px;">
+        ▼ 3.250,86
+      </td>
+      <td style="text-align:center;">
+        <span class="pill-azul">AZUL</span>
+      </td>
+    </tr></tbody>
+          <tfoot><tr class="total-row">
+    <td class="col-mes" style="color:white;">TOTAL 12 MESES</td>
+    <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+    <td class="winner-azul">2.976.879,47</td>
+    <td class="">3.032.811,18</td>
+    <td style="text-align:center; color:#9ec99a; font-size:11px;">55.931,70</td>
+    <td style="text-align:center;"><span class="pill-azul" style="background:#dde6f0">AZUL</span></td>
+  </tr></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- DETALHAMENTO POR LINHA (médias) -->
+    <div class="card">
+      <div class="card-title">
+        Memorial de Cálculo — Base: médias dos 12 meses
+        <span class="card-subtitle">ICMS 17,00% · PIS/COFINS 1,98% · Gross-up aplicado</span>
+      </div>
+
+      <details>
+        <summary style="cursor:pointer;font-weight:600;color:var(--primary);font-size:13px;padding:6px 0;">
+          <span class="tag-azul">AZUL</span> — Detalhamento por componente (valores médios mensais)
+        </summary>
+        <div style="overflow-x:auto;margin-top:10px;">
+          <table class="breakdown-table">
+            <thead><tr>
+              <th>Componente</th><th class="num">Volume</th>
+              <th class="num">Tarifa Base</th><th class="num">PIS</th>
+              <th class="num">ICMS</th><th class="num">c/ Impostos</th>
+              <th class="num">R$/mês (médio)</th>
+            </tr></thead>
+            <tbody><tr style="">
+      <td>Demanda Ponta</td>
+      <td class="num">681,75</td>
+      <td class="num">38,06000</td>
+      <td class="num">0,76881</td>
+      <td class="num">7,95289</td>
+      <td class="num">46,78170</td>
+      <td class="num"><strong>R$ 31.893,42</strong></td>
+    </tr><tr style="">
+      <td>Dem. Ponta (isenta)</td>
+      <td class="num">113,25</td>
+      <td class="num">38,06000</td>
+      <td class="num">0,76881</td>
+      <td class="num">0,00000</td>
+      <td class="num">38,82881</td>
+      <td class="num"><strong>R$ 4.397,36</strong></td>
+    </tr><tr style="">
+      <td>Demanda F. Ponta</td>
+      <td class="num">876,25</td>
+      <td class="num">18,09000</td>
+      <td class="num">0,36542</td>
+      <td class="num">3,78003</td>
+      <td class="num">22,23544</td>
+      <td class="num"><strong>R$ 19.483,81</strong></td>
+    </tr><tr style="opacity:0.4;">
+      <td>Dem. F.Ponta (isenta)</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num"><strong>—</strong></td>
+    </tr><tr style="">
+      <td>TUSD Ponta</td>
+      <td class="num">36.016,00</td>
+      <td class="num">0,14435</td>
+      <td class="num">0,00292</td>
+      <td class="num">0,03016</td>
+      <td class="num">0,17743</td>
+      <td class="num"><strong>R$ 6.390,27</strong></td>
+    </tr><tr style="">
+      <td>TUSD Fora Ponta</td>
+      <td class="num">299.783,67</td>
+      <td class="num">0,14435</td>
+      <td class="num">0,00292</td>
+      <td class="num">0,03016</td>
+      <td class="num">0,17743</td>
+      <td class="num"><strong>R$ 53.190,24</strong></td>
+    </tr><tr style="">
+      <td>TE Ponta</td>
+      <td class="num">36.016,00</td>
+      <td class="num">0,48363</td>
+      <td class="num">0,00977</td>
+      <td class="num">0,10106</td>
+      <td class="num">0,59446</td>
+      <td class="num"><strong>R$ 21.409,96</strong></td>
+    </tr><tr style="">
+      <td>TE Fora Ponta</td>
+      <td class="num">299.783,67</td>
+      <td class="num">0,30123</td>
+      <td class="num">0,00608</td>
+      <td class="num">0,06294</td>
+      <td class="num">0,37026</td>
+      <td class="num"><strong>R$ 110.997,55</strong></td>
+    </tr><tr style="opacity:0.4;">
+      <td>Ultrapassagem F.Ponta</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num"><strong>—</strong></td>
+    </tr></tbody>
+            <tfoot><tr class="total-row">
+              <td colspan="6"><strong>TOTAL AZUL (médio/mês)</strong></td>
+              <td class="num winner-col"><strong>R$ 247.762,62</strong></td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </details>
+
+      <details style="margin-top:10px;">
+        <summary style="cursor:pointer;font-weight:600;color:var(--success);font-size:13px;padding:6px 0;">
+          <span class="tag-verde">VERDE</span> — Detalhamento por componente (valores médios mensais)
+        </summary>
+        <div style="overflow-x:auto;margin-top:10px;">
+          <table class="breakdown-table">
+            <thead><tr>
+              <th>Componente</th><th class="num">Volume</th>
+              <th class="num">Tarifa Base</th><th class="num">PIS</th>
+              <th class="num">ICMS</th><th class="num">c/ Impostos</th>
+              <th class="num">R$/mês (médio)</th>
+            </tr></thead>
+            <tbody><tr style="opacity:0.4;">
+      <td>Demanda Ponta</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num"><strong>—</strong></td>
+    </tr><tr style="opacity:0.4;">
+      <td>Dem. Ponta (isenta)</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num"><strong>—</strong></td>
+    </tr><tr style="">
+      <td>Demanda F. Ponta</td>
+      <td class="num">876,25</td>
+      <td class="num">18,09000</td>
+      <td class="num">0,36542</td>
+      <td class="num">3,78003</td>
+      <td class="num">22,23544</td>
+      <td class="num"><strong>R$ 19.483,81</strong></td>
+    </tr><tr style="opacity:0.4;">
+      <td>Dem. F.Ponta (isenta)</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num"><strong>—</strong></td>
+    </tr><tr style="">
+      <td>TUSD Ponta</td>
+      <td class="num">36.016,00</td>
+      <td class="num">1,06941</td>
+      <td class="num">0,02160</td>
+      <td class="num">0,22346</td>
+      <td class="num">1,31447</td>
+      <td class="num"><strong>R$ 47.342,04</strong></td>
+    </tr><tr style="">
+      <td>TUSD Fora Ponta</td>
+      <td class="num">299.783,67</td>
+      <td class="num">0,14435</td>
+      <td class="num">0,00292</td>
+      <td class="num">0,03016</td>
+      <td class="num">0,17743</td>
+      <td class="num"><strong>R$ 53.190,24</strong></td>
+    </tr><tr style="">
+      <td>TE Ponta</td>
+      <td class="num">36.016,00</td>
+      <td class="num">0,48363</td>
+      <td class="num">0,00977</td>
+      <td class="num">0,10106</td>
+      <td class="num">0,59446</td>
+      <td class="num"><strong>R$ 21.409,96</strong></td>
+    </tr><tr style="">
+      <td>TE Fora Ponta</td>
+      <td class="num">299.783,67</td>
+      <td class="num">0,30123</td>
+      <td class="num">0,00608</td>
+      <td class="num">0,06294</td>
+      <td class="num">0,37026</td>
+      <td class="num"><strong>R$ 110.997,55</strong></td>
+    </tr><tr style="opacity:0.4;">
+      <td>Ultrapassagem F.Ponta</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num"><strong>—</strong></td>
+    </tr></tbody>
+            <tfoot><tr class="total-row">
+              <td colspan="6"><strong>TOTAL VERDE (médio/mês)</strong></td>
+              <td class="num "><strong>R$ 252.423,60</strong></td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </details>
+    </div>
+
+    <div style="text-align:center; padding:10px 0; font-size:11px; color:var(--text-muted);">
+      Gerado em 21/07/2026, 07:54:49 ·
+      <strong>ZAGONEL S.A-04/2026</strong> · UC — · CELESC
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="no-print">
+  <strong style="color: var(--primary);">Grupo Spirit · Energia</strong> — Comparativo Horo-Sazonal Azul × Verde · v1.0
+</footer>
 </div>
 
-<script src="{{ url_for('static', filename='js/analytics/tarifa_verde_azul.js') }}"></script>
+<!-- ÁREA DE IMPRESSÃO (oculta na tela, visível ao imprimir) -->
+<div id="print-area">
+    
+    <div class="pi-header">
+      <div class="pi-header-left">
+        <img class="pi-header-logo" src="{{ url_for('static', filename='img/analytics/logo-spirit-energia.png') }}" alt="Spirit Energia">
+        <div class="pi-header-brand">
+          <div class="pi-header-brand-name">Grupo Spirit · Energia</div>
+          <div class="pi-header-title">Comparativo de Modalidade Tarifária</div>
+          <div class="pi-header-sub">Horo-Sazonal Azul × Verde — Qual é a melhor opção?</div>
+        </div>
+      </div>
+      <div class="pi-header-right">
+        <div>21/07/2026</div>
+        <div>07:54</div>
+        <div style="margin-top:4px; font-size:9px;">ICMS 17,00% · PIS/COFINS 1,98%</div>
+      </div>
+    </div>
+    
+    <div class="pi-client-section">
+      <div class="pi-client-grid">
+        <div class="pi-client-item"><label>Cliente</label><span>ZAGONEL S.A-04/2026</span></div>
+        <div class="pi-client-item"><label>CNPJ / CPF</label><span>81.365.223/0001-54</span></div>
+        <div class="pi-client-item"><label>UC / Instalação</label><span>—</span></div>
+        <div class="pi-client-item"><label>Distribuidora</label><span>CELESC</span></div>
+        <div class="pi-client-item"><label>Endereço</label><span>—</span></div>
+        <div class="pi-client-item"><label>Classe / Tensão</label><span>A4</span></div>
+        <div class="pi-client-item"><label>Modalidade Atual</label><span>VERDE</span></div>
+        <div class="pi-client-item"><label>Demanda Contratada</label><span>Ponta: 795 kW · F. Ponta: 800 kW</span></div>
+      </div>
+    </div>
+    
+    <div class="pi-dash">
+      <div class="pi-rec rec-azul">
+        <div class="rec-badge">AZUL</div>
+        <div class="rec-txt">
+          <strong>Recomendação: migrar para AZUL</strong>
+          Economia estimada: <strong>R$ 4.660,98/mês</strong><br>
+          Total nos 12 meses analisados: <strong>R$ 55.931,70</strong>
+        </div>
+      </div>
+      <div class="pi-kpi winner">
+        <label>Total Horo-Sazonal AZUL</label>
+        <div class="val">R$ 2.976.879</div>
+        <div class="sub">10 meses mais baratos</div>
+      </div>
+      <div class="pi-kpi loser">
+        <label>Total Horo-Sazonal VERDE</label>
+        <div class="val">R$ 3.032.811</div>
+        <div class="sub">2 meses mais baratos</div>
+      </div>
+    </div>
+    
+    <div class="pi-table-title">Comparativo Mensal — Azul × Verde &nbsp;·&nbsp; valores em R$</div>
+    <table class="pi-table">
+      <thead>
+        <tr>
+          <th class="h-gray" rowspan="2" style="text-align:left;">Mês</th>
+          <th class="h-gray" colspan="7">Volumes Medidos</th>
+          <th class="h-azul" colspan="2">Simulação (R$)</th>
+          <th class="h-gray" rowspan="2">Diferença</th>
+          <th class="h-gray" rowspan="2">Melhor</th>
+        </tr>
+        <tr>
+          <th class="h-gray">D.Ponta (kW)</th>
+          <th class="h-gray">D.P. Isenta</th>
+          <th class="h-gray">D.F.Ponta (kW)</th>
+          <th class="h-gray">D.FP. Isenta</th>
+          <th class="h-gray">Ultrapass.</th>
+          <th class="h-gray">C.Ponta (kWh)</th>
+          <th class="h-gray">C.F.Ponta (kWh)</th>
+          <th class="h-azul">AZUL</th>
+          <th class="h-verde">VERDE</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+      <td class="mes-col">04/26</td>
+      <td>795,0</td>
+      <td>0,0</td>
+      <td>1.034,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>42.381</td>
+      <td>353.669</td>
+      <td class="win-azul">286.596,31</td>
+      <td class="">297.593,90</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 10.997,59</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">03/26</td>
+      <td>783,0</td>
+      <td>12,0</td>
+      <td>1.024,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>46.312</td>
+      <td>398.281</td>
+      <td class="win-azul">313.746,24</td>
+      <td class="">329.308,99</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 15.562,75</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">02/26</td>
+      <td>763,0</td>
+      <td>32,0</td>
+      <td>994,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>38.859</td>
+      <td>335.586</td>
+      <td class="win-azul">272.829,98</td>
+      <td class="">280.077,40</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 7.247,42</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">01/26</td>
+      <td>744,0</td>
+      <td>51,0</td>
+      <td>1.007,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>38.383</td>
+      <td>320.382</td>
+      <td class="win-azul">264.273,48</td>
+      <td class="">271.130,77</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 6.857,29</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">12/25</td>
+      <td>692,0</td>
+      <td>103,0</td>
+      <td>915,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>26.083</td>
+      <td>220.575</td>
+      <td class="">197.657,02</td>
+      <td class="win-verde">190.942,22</td>
+      <td style="color:#1e3e6e; font-weight:600;">▲ 6.714,80</td>
+      <td style="text-align:center;"><span class="pill pill-v">VERDE</span></td>
+    </tr><tr>
+      <td class="mes-col">11/25</td>
+      <td>691,0</td>
+      <td>104,0</td>
+      <td>943,0</td>
+      <td>0,0</td>
+      <td>0,0</td>
+      <td>30.149</td>
+      <td>267.230</td>
+      <td class="">226.962,51</td>
+      <td class="win-verde">224.878,89</td>
+      <td style="color:#1e3e6e; font-weight:600;">▲ 2.083,62</td>
+      <td style="text-align:center;"><span class="pill pill-v">VERDE</span></td>
+    </tr><tr>
+      <td class="mes-col">10/25</td>
+      <td>616,0</td>
+      <td>179,0</td>
+      <td>732,0</td>
+      <td>68,0</td>
+      <td>0,0</td>
+      <td>35.168</td>
+      <td>282.655</td>
+      <td class="win-azul">235.251,51</td>
+      <td class="">239.471,17</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 4.219,66</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">09/25</td>
+      <td>612,0</td>
+      <td>183,0</td>
+      <td>774,0</td>
+      <td>26,0</td>
+      <td>0,0</td>
+      <td>35.059</td>
+      <td>271.204</td>
+      <td class="win-azul">229.022,75</td>
+      <td class="">233.150,29</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 4.127,54</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">08/25</td>
+      <td>633,0</td>
+      <td>162,0</td>
+      <td>763,0</td>
+      <td>37,0</td>
+      <td>0,0</td>
+      <td>34.982</td>
+      <td>283.070</td>
+      <td class="win-azul">235.587,61</td>
+      <td class="">239.460,58</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 3.872,98</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">07/25</td>
+      <td>608,0</td>
+      <td>187,0</td>
+      <td>776,0</td>
+      <td>24,0</td>
+      <td>0,0</td>
+      <td>38.046</td>
+      <td>305.728</td>
+      <td class="win-azul">250.212,49</td>
+      <td class="">257.768,19</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 7.555,70</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">06/25</td>
+      <td>635,0</td>
+      <td>160,0</td>
+      <td>778,0</td>
+      <td>22,0</td>
+      <td>0,0</td>
+      <td>32.503</td>
+      <td>275.797</td>
+      <td class="win-azul">229.763,38</td>
+      <td class="">230.801,72</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 1.038,34</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr><tr>
+      <td class="mes-col">05/25</td>
+      <td>609,0</td>
+      <td>186,0</td>
+      <td>775,0</td>
+      <td>25,0</td>
+      <td>0,0</td>
+      <td>34.267</td>
+      <td>283.227</td>
+      <td class="win-azul">234.976,19</td>
+      <td class="">238.227,05</td>
+      <td style="color:#4a7e44; font-weight:600;">▼ 3.250,86</td>
+      <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+    </tr></tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td class="mes-col">TOTAL</td>
+          <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          <td>2.976.879,47</td>
+          <td>3.032.811,18</td>
+          <td>55.931,70</td>
+          <td style="text-align:center;"><span class="pill pill-a">AZUL</span></td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="pi-footer">
+      <span>Spirit Geração e Comercialização de Energia LTDA</span>
+      <span>Comparativo interno — não substitui análise técnica regulatória</span>
+    </div>
+  </div>
 
+<!-- Modal simulações -->
+<div id="simulationsModal" style="display: none; position: fixed; inset: 0px; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center;">
+  <div style="background:white; padding:24px; border-radius:10px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <h3 style="color:var(--primary);">Simulações Salvas</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeSimulationsModal()">Fechar</button>
+    </div>
+    <ul id="simulationsList" style="list-style:none; display:flex; flex-direction:column; gap:8px;"><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ALLES PARK-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">10/07/2026, 13:45</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783701958535&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783701958535&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">AV CARMINATTI-02-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">10/07/2026, 13:43</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783701830380&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783701830380&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ZAGONEL S.A-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">10/07/2026, 11:46</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783694782338&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783694782338&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">WR FERNANDES-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">10/07/2026, 11:33</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783693991393&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783693991393&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">VEREMA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">09/07/2026, 14:19</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783617565834&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783617565834&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">TRONCOS PROGRESSO-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">09/07/2026, 13:59</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783616351623&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783616351623&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">THABRULAI-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">09/07/2026, 11:54</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783608882504&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783608882504&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">TABAJARA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">09/07/2026, 10:49</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783604944802&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783604944802&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">SUL PELLETS-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">09/07/2026, 10:35</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783604146153&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783604146153&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">SIMONETTO-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">09/07/2026, 08:53</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783598026860&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783598026860&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">SEGALAS GASPAR-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 14:57</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783533444597&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783533444597&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">SEGALAS BNU-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 14:39</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783532368940&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783532368940&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">POMERPLAST-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 14:20</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783531223997&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783531223997&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">PET FACTORY-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 13:58</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783529933093&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783529933093&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MTA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 11:34</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783521262499&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783521262499&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MOVEIS BONATO-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 11:09</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783519756858&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783519756858&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MAXIPLAST RAFIA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 11:01</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783519266910&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783519266910&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MAXIPLAST MAT-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 10:21</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783516905287&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783516905287&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MAXIPLAST-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 09:46</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783514798502&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783514798502&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MAREL-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 09:02</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783512156682&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783512156682&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MAREL ADM-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 08:40</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783510825793&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783510825793&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LOGHAUS-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 08:24</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783509899047&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783509899047&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LOGHAUS33-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">08/07/2026, 08:00</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783508434446&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783508434446&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LAT VALE DO ITA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 16:31</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783452666971&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783452666971&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LATICINIOS SUCESSO PLA-04/26</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 16:12</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783451524660&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783451524660&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LAT SUCESSO PINHAL-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 15:25</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783448744395&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783448744395&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LAT SUCESSO CA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 14:38</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783445935934&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783445935934&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LAT HORIZONTE-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 14:08</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783444103679&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783444103679&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LAT FORMOSA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 11:49</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783435799329&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783435799329&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">LAT ALTO DO VALE-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 11:35</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783434950949&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783434950949&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">KENDY BRINQUEDOS-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 10:45</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783431952313&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783431952313&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">JUSSANIA A LAZARINI-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 10:03</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783429423330&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783429423330&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">J A LAZARINI-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 09:40</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783428014798&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783428014798&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">INCUB GRANJA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 09:01</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783425661296&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783425661296&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">INCUB BOM JESUS-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 08:34</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783424065472&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783424065472&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">INCOPLAN-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 08:20</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783423206844&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783423206844&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">GLASS HOUSE-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">07/07/2026, 08:00</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783422057755&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783422057755&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">FUNDIÇÃO PINHALENSE-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">03/07/2026, 15:57</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783105078058&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783105078058&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">FST-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">03/07/2026, 15:21</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783102891756&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783102891756&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">FLORAPACK-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">03/07/2026, 14:27</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783099635384&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783099635384&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">FIOBRAS-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">03/07/2026, 13:50</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783097448926&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783097448926&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">FAKINI-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">02/07/2026, 17:00</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783022433966&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783022433966&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">EPEX INDUSTRIA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">02/07/2026, 15:50</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783018248333&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783018248333&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">DIPOLI-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">02/07/2026, 14:58</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783015123284&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783015123284&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CLECI MARIA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">02/07/2026, 12:01</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783004474378&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783004474378&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CLARICE-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">02/07/2026, 11:02</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783000940303&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783000940303&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CISS-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">02/07/2026, 10:49</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1783000199850&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1783000199850&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CENTERPLAST-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">02/07/2026, 10:27</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782998854225&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782998854225&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CATIVA TEXTIL IND-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">02/07/2026, 08:36</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782992180640&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782992180640&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CATIVA TEXTIL-07-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">01/07/2026, 16:49</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782935387191&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782935387191&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CARMINATTI PINHAL-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">01/07/2026, 16:24</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782933881953&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782933881953&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CARMINATTI NSª DO CARMO-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">01/07/2026, 16:09</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782932946063&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782932946063&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CARMINATTI FORTALLI-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">01/07/2026, 15:27</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782930451946&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782930451946&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CARMINATTI ENTREPOSTO-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">01/07/2026, 14:56</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782928619558&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782928619558&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CARMINATTI CEREAIS-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">01/07/2026, 14:27</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782926836537&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782926836537&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">B S FERNANDES-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">01/07/2026, 14:02</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782925358416&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782925358416&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">BOM SUCESSO-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">30/06/2026, 16:17</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782847035982&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782847035982&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">BNU ILUMINAÇÃO CD-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">30/06/2026, 15:21</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782843704886&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782843704886&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">BNU ILUMINAÇÃO-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">30/06/2026, 14:52</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782841977149&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782841977149&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">BELPLAS-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">30/06/2026, 13:38</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782837501249&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782837501249&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">BELLA ARTE-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">30/06/2026, 11:41</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782830481738&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782830481738&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">BATERIAS REAL-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">30/06/2026, 11:16</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782829016187&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782829016187&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">AV CARMINATTI-03-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">30/06/2026, 10:13</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782825233144&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782825233144&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">AV CARMINATTI-02-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">30/06/2026, 09:28</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782822495874&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782822495874&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">AV CARMINATTI-01-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">29/06/2026, 09:56</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782737766314&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782737766314&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ALTONA-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">29/06/2026, 08:57</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782734259746&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782734259746&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ALTO ALEGRE-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">26/06/2026, 16:55</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782503720818&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782503720818&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ALLES PARK-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">26/06/2026, 16:08</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782500907613&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782500907613&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">AGUA MINERAL-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">26/06/2026, 10:56</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782482204986&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782482204986&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-43-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">26/06/2026, 09:24</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782476661790&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782476661790&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-42-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">26/06/2026, 08:36</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782473772042&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782473772042&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-40-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 14:50</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782409806557&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782409806557&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-39-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 14:33</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782408805739&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782408805739&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-37-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 14:17</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782407870678&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782407870678&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-34-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 14:04</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782407084685&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782407084685&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-33-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 13:54</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782406459146&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782406459146&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-32-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 11:45</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782398730648&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782398730648&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-31-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 11:34</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782398066550&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782398066550&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-30-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 11:23</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782397405020&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782397405020&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-28-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 10:36</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782394579096&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782394579096&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-27-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 09:30</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782390645619&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782390645619&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-26-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 08:56</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782388593198&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782388593198&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-24-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 08:27</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782386823450&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782386823450&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-23-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">25/06/2026, 07:54</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782384843477&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782384843477&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-22-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 20:12</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782169958240&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782169958240&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-21-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 19:23</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782167017557&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782167017557&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-20-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 19:03</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782165801360&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782165801360&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-19-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 18:41</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782164493624&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782164493624&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-17-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 17:47</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782161270489&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782161270489&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-16-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 17:26</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782159993428&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782159993428&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-15-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 15:36</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782153419537&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782153419537&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-14-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 15:21</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782152504875&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782152504875&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-13-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 14:47</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782150434995&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782150434995&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-11-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 11:46</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782139615208&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782139615208&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-10-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 10:51</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782136308155&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782136308155&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-09-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 10:04</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782133458126&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782133458126&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-08-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">22/06/2026, 09:26</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1782131175103&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1782131175103&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-07-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">19/06/2026, 16:50</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1781898621321&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1781898621321&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-06-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">19/06/2026, 16:16</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1781896606145&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1781896606145&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-03-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">19/06/2026, 15:39</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1781894364042&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1781894364042&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li><li style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ITALO-02-04/2026</strong>
+            <span style="font-size:12px;color:var(--text-muted);">19/06/2026, 15:02</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="loadSimulation(&#39;1781892160464&#39;)">📂 Abrir</button>
+            <button class="btn btn-sm btn-secondary" onclick="deleteSimulation(&#39;1781892160464&#39;)" style="color:#c0392b;">🗑</button>
+          </div>
+        </li></ul>
+  </div>
+</div>
+
+<!-- Modal processamento fatura -->
+<div id="faturaLoadingModal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.5); z-index:1100; align-items:center; justify-content:center;">
+  <div style="background:white; padding:32px; border-radius:10px; text-align:center; min-width:280px;">
+    <div style="font-size:40px; margin-bottom:12px;">📄</div>
+    <h3 style="color:var(--primary);">Processando fatura…</h3>
+    <p id="faturaLoadingStep" style="color:var(--text-muted); font-size:13px; margin-top:8px;">Carregando PDF</p>
+  </div>
+</div>
+
+<!-- Modal revisão fatura -->
+<div id="faturaReviewModal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto;">
+  <div style="background:white; padding:24px; border-radius:10px; max-width:820px; width:100%; margin:20px auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <div>
+        <h3 style="color:var(--primary);">Revisão dos dados extraídos</h3>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Confira e edite antes de aplicar. Itens não detectados aparecem em branco.</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="closeFaturaReviewModal()">Fechar</button>
+    </div>
+    <div class="card" style="background:#fafbfa; box-shadow:none;">
+      <div class="card-title">Dados Cadastrais</div>
+      <div class="grid grid-3" id="faturaCadastralFields"></div>
+    </div>
+    <div class="card" style="background:#fafbfa; box-shadow:none;">
+      <div class="card-title">Demandas Contratadas</div>
+      <div class="grid grid-3" id="faturaDemandaFields"></div>
+    </div>
+    <div class="card" style="background:#fafbfa; box-shadow:none;">
+      <div class="card-title" id="faturaConsumoTitle">Histórico de Consumo Extraído</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr>
+            <th>Mês</th>
+            <th class="num">Dem. Ponta (kW)</th>
+            <th class="num">Dem. F.Ponta (kW)</th>
+            <th class="num">Ultr. F.Ponta (kW)</th>
+            <th class="num">Cons. Ponta (kWh)</th>
+            <th class="num">Cons. F.Ponta (kWh)</th>
+          </tr></thead>
+          <tbody id="faturaConsumoRows"></tbody>
+        </table>
+      </div>
+    </div>
+    <details style="margin-top:12px;">
+      <summary style="cursor:pointer; font-size:12px; color:var(--text-muted);">📜 Ver texto bruto extraído do PDF (debug)</summary>
+      <pre id="faturaRawText" style="background:#f5f7f6; padding:10px; border-radius:6px; font-size:11px; max-height:300px; overflow:auto; margin-top:8px; white-space:pre-wrap; word-break:break-all;"></pre>
+    </details>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeFaturaReviewModal()">Cancelar</button>
+      <button class="btn" onclick="applyFaturaExtraction()">✓ Aplicar à Simulação</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='estudos/tarifa_verde_azul/pdf.min.js.baixados') }}"></script>
+
+<script src="{{ url_for('static', filename='js/analytics/tarifa_verde_azul.js') }}"></script>
 {% endblock %}
